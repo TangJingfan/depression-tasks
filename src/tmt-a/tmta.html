@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMT-A Test</title> 
+    <title>TMT-A Test</title>
     <style>
         /* Above is html setting */
         /* line 1 -> Claim file type to be html */
@@ -14,23 +15,36 @@
         /* line 6 -> title */
         /* line 7 -> title part */
         body {
-            font-family: Arial, sans-serif; /* Set the font for the page */
-            display: flex; /* Use flexbox for layout */
-            flex-direction: column; /* Arrange items in a column */
-            align-items: center; /* Center items horizontally */
-            justify-content: center; /* Center items vertically */
-            height: 100vh; /* Full viewport height */
-            margin: 0; /* Remove default margin */
-            position: relative; /* Set positioning for the container */
-            overflow: hidden; /* Hide any overflowing content */
+            font-family: Arial, sans-serif;
+            /* Set the font for the page */
+            display: flex;
+            /* Use flexbox for layout */
+            flex-direction: column;
+            /* Arrange items in a column */
+            align-items: center;
+            /* Center items horizontally */
+            justify-content: center;
+            /* Center items vertically */
+            height: 100vh;
+            /* Full viewport height */
+            margin: 0;
+            /* Remove default margin */
+            position: relative;
+            /* Set positioning for the container */
+            overflow: hidden;
+            /* Hide any overflowing content */
         }
+
         #container {
             /* container serves to control the place where elements can appear */
-            width: 900px; /* set width */
-            height: 600px; /* set height */
+            width: 900px;
+            /* set width */
+            height: 600px;
+            /* set height */
             position: relative;
             border: 1px solid #ccc;
         }
+
         .circle {
             width: 55px;
             height: 55px;
@@ -44,114 +58,110 @@
             font-size: 20px;
             transition: background-color 0.3s;
         }
+
         .correct {
-            background-color:green !important;
+            background-color: green !important;
         }
+
         .incorrect {
             background-color: red !important;
         }
     </style>
 </head>
+
 <body>
 
 
 
-<h1>TMT-A Test</h1>
-<div id="container"></div>
-<p id="result"></p>
+    <h1>TMT-A Test</h1>
+    <div id="container"></div>
+    <p id="result"></p>
 
-<script>
-    let currentNum = 1;
-    let startTime;
-    let lastIncorrectCircle = null;
+    <script>
+        let currentNum = 1;
+        let startTime;
+        let lastIncorrectCircle = null;
 
-    function shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
         }
-        return array;
-    }
 
-    // Fisher-yates algo
+        // Fisher-yates algo
 
-    function isOverlapping(x, y, circles) {
-        for (let i = 0; i < circles.length; i++) {
-            const circleX = circles[i].offsetLeft + circles[i].offsetWidth / 2;
-            const circleY = circles[i].offsetTop + circles[i].offsetHeight / 2;
-            const distance = Math.sqrt(Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2));
-                if (distance < 120) {  // 120 是最小允许距离
+        function isOverlapping(x, y, circles) {
+            for (let i = 0; i < circles.length; i++) {
+                const circleX = circles[i].offsetLeft + circles[i].offsetWidth / 2;
+                const circleY = circles[i].offsetTop + circles[i].offsetHeight / 2;
+                const distance = Math.sqrt(Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2));
+                if (distance < 120) {  // 120 is the minimun distance
                     return true;
                 }
+            }
+            return false;
         }
-        return false;
-    }
 
 
-    function generateCircles() {
-        const container = document.getElementById('container');
-        const numbers = Array.from({length: 25}, (_, i) => i + 1);
-        shuffle(numbers);
+        function generateCircles() {
+            const container = document.getElementById('container');
+            const numbers = Array.from({ length: 25 }, (_, i) => i + 1);
+            shuffle(numbers);
 
-        numbers.forEach(num => {
-            const circle = document.createElement('div');
-            circle.className = 'circle';
-            circle.textContent = num;
+            numbers.forEach(num => {
+                const circle = document.createElement('div');
+                circle.className = 'circle';
+                circle.textContent = num;
 
-            let x, y;
-            do {
-                x = Math.random() * (container.clientWidth - 60);
-                y = Math.random() * (container.clientHeight - 60);
-            } while (isOverlapping(x, y, document.querySelectorAll('.circle'))); // 中心点检测
+                let x, y;
+                do {
+                    x = Math.random() * (container.clientWidth - 60);
+                    y = Math.random() * (container.clientHeight - 60);
+                } while (isOverlapping(x, y, document.querySelectorAll('.circle'))); // examining the distance 
 
-            circle.style.left = `${x}px`;
-            circle.style.top = `${y}px`;
-            circle.onclick = () => handleClick(num, circle);
-            container.appendChild(circle);
-        });
-    }
-
-    function handleClick(num, circle) {
-        if (num === currentNum) {
-            circle.classList.remove('incorrect');
-            circle.classList.add('correct');
-
-            if (lastIncorrectCircle) {
-                lastIncorrectCircle.classList.remove('incorrect');
-                lastIncorrectCircle = null;
-            }
-
-            if (num === 1) {
-                startTime = new Date(); 
-            }
-            if (num === 25) {
-                const endTime = new Date();
-                const totalTime = (endTime - startTime) / 1000;
-                document.getElementById('result').textContent = `Test completed in ${totalTime.toFixed(2)} seconds`;
-                document.querySelectorAll('.circle').forEach(circle => circle.style.visibility = 'hidden');
-                
-                const previousResults = JSON.parse(localStorage.getItem('tmtaResults')) || [];
-                previousResults.push({ time: totalTime, date: new Date().toISOString() });
-                localStorage.setItem('tmtaResults', JSON.stringify(previousResults));
-            }
-            currentNum += 1;
-        } else {
-            circle.classList.add('incorrect');
-            lastIncorrectCircle = circle;
+                circle.style.left = `${x}px`;
+                circle.style.top = `${y}px`;
+                circle.onclick = () => handleClick(num, circle);
+                container.appendChild(circle);
+            });
         }
-    }
 
-    // function showPreviousResults() {
-    //     const results = JSON.parse(localStorage.getItem('tmtaResults')) || [];
-    //     if (results.length > 0) {
-    //         const resultText = results.map(result => `Time: ${result.time}s on ${result.date}`).join('<br>');
-    //         document.getElementById('result').innerHTML = `Previous Results:<br>${resultText}`;
-    //     }
-    // }
+        function handleClick(num, circle) {
+            if (num === currentNum) {
+                circle.classList.remove('incorrect');
+                circle.classList.add('correct');
 
-    generateCircles();
-    showPreviousResults();
-</script>
+                if (lastIncorrectCircle) {
+                    lastIncorrectCircle.classList.remove('incorrect');
+                    lastIncorrectCircle = null;
+                }
+
+                if (num === 1) {
+                    startTime = new Date();
+                }
+                if (num === 25) {
+                    const endTime = new Date();
+                    const totalTime = (endTime - startTime) / 1000;
+                    document.getElementById('result').textContent = `Test completed in ${totalTime.toFixed(2)} seconds`;
+                    document.querySelectorAll('.circle').forEach(circle => circle.style.visibility = 'hidden');
+
+                    const previousResults = JSON.parse(localStorage.getItem('tmtaResults')) || [];
+                    previousResults.push({ time: totalTime, date: new Date().toISOString() });
+                    localStorage.setItem('tmtaResults', JSON.stringify(previousResults));
+                }
+                currentNum += 1;
+            } else {
+                circle.classList.add('incorrect');
+                lastIncorrectCircle = circle;
+            }
+        }
+
+
+        generateCircles();
+    </script>
 
 </body>
+
 </html>
