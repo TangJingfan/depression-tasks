@@ -1,0 +1,9 @@
+*
+**
+
+!.gitignore
+!src/
+!README.md
+!src/tmta
+!src/tmta/..
+
