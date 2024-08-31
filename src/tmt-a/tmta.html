@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMT-A Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(5, 100px);
+            grid-template-rows: repeat(5, 100px);
+            gap: 10px;
+        }
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: lightblue;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .hidden {
+            visibility: hidden;
+        }
+        .correct {
+            background-color: green !important;
+        }
+        .incorrect {
+            background-color: red !important;
+        }
+    </style>
+</head>
+<body>
+
+<h1>TMT-A Test</h1>
+<div id="grid"></div>
+<p id="result"></p>
+
+<script>
+    let currentNum = 1;
+    let startTime;
+    let lastIncorrectCell = null;  // 用于跟踪最后一个错误的方块
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function generateGrid() {
+        const grid = document.getElementById('grid');
+        const positions = Array.from({length: 25}, (_, i) => i + 1);
+        shuffle(positions);
+
+        positions.forEach(num => {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.textContent = num;
+            cell.onclick = () => handleClick(num, cell);
+            grid.appendChild(cell);
+        });
+    }
+
+    function handleClick(num, cell) {
+        if (num === currentNum) {
+            cell.classList.remove('incorrect');
+            cell.classList.add('correct');
+            
+            if (lastIncorrectCell) {
+                lastIncorrectCell.classList.remove('incorrect');  // 恢复上一个错误方块的颜色
+                lastIncorrectCell = null;
+            }
+
+            if (num === 1) {
+                startTime = new Date();
+            }
+            if (num === 25) {
+                const endTime = new Date();
+                const totalTime = (endTime - startTime) / 1000;
+                document.getElementById('result').textContent = `Test completed in ${totalTime.toFixed(2)} seconds`;
+                document.querySelectorAll('.cell').forEach(cell => cell.classList.add('hidden'));
+                
+                // 可选：在本地存储测试结果
+                const previousResults = JSON.parse(localStorage.getItem('tmtaResults')) || [];
+                previousResults.push({ time: totalTime, date: new Date().toISOString() });
+                localStorage.setItem('tmtaResults', JSON.stringify(previousResults));
+            }
+            currentNum += 1;
+        } else {
+            cell.classList.add('incorrect');
+            lastIncorrectCell = cell;  // 记录当前错误的方块
+        }
+    }
+
+    function showPreviousResults() {
+        const results = JSON.parse(localStorage.getItem('tmtaResults')) || [];
+        if (results.length > 0) {
+            const resultText = results.map(result => `Time: ${result.time}s on ${result.date}`).join('<br>');
+            document.getElementById('result').innerHTML = `Previous Results:<br>${resultText}`;
+        }
+    }
+
+    generateGrid();
+    showPreviousResults();
+</script>
+
+</body>
+</html>
