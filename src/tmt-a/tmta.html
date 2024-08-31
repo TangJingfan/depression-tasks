@@ -3,37 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TMT-A Test</title>
+    <title>TMT-A Test</title> 
     <style>
+        /* Above is html setting */
+        /* line 1 -> Claim file type to be html */
+        /* line 2 -> Claim language to be English */
+        /* line 3 -> Head part */
+        /* line 4 -> <head> part */
+        /* line 5 -> Claim file type to be html */
+        /* line 6 -> title */
+        /* line 7 -> title part */
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
+            font-family: Arial, sans-serif; /* Set the font for the page */
+            display: flex; /* Use flexbox for layout */
+            flex-direction: column; /* Arrange items in a column */
+            align-items: center; /* Center items horizontally */
+            justify-content: center; /* Center items vertically */
+            height: 100vh; /* Full viewport height */
+            margin: 0; /* Remove default margin */
+            position: relative; /* Set positioning for the container */
+            overflow: hidden; /* Hide any overflowing content */
         }
-        #grid {
-            display: grid;
-            grid-template-columns: repeat(5, 100px);
-            grid-template-rows: repeat(5, 100px);
-            gap: 10px;
+        #container {
+            /* container serves to control the place where elements can appear */
+            width: 900px; /* set width */
+            height: 600px; /* set height */
+            position: relative;
+            border: 1px solid #ccc;
         }
-        .cell {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .circle {
+            width: 55px;
+            height: 55px;
             background-color: lightblue;
-            font-size: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
             cursor: pointer;
+            font-size: 20px;
             transition: background-color 0.3s;
         }
-        .hidden {
-            visibility: hidden;
-        }
         .correct {
-            background-color: green !important;
+            background-color:green !important;
         }
         .incorrect {
             background-color: red !important;
@@ -42,14 +54,16 @@
 </head>
 <body>
 
+
+
 <h1>TMT-A Test</h1>
-<div id="grid"></div>
+<div id="container"></div>
 <p id="result"></p>
 
 <script>
     let currentNum = 1;
     let startTime;
-    let lastIncorrectCell = null;  // 用于跟踪最后一个错误的方块
+    let lastIncorrectCircle = null;
 
     function shuffle(array) {
         for (let i = array.length - 1; i > 0; i--) {
@@ -59,60 +73,83 @@
         return array;
     }
 
-    function generateGrid() {
-        const grid = document.getElementById('grid');
-        const positions = Array.from({length: 25}, (_, i) => i + 1);
-        shuffle(positions);
+    // Fisher-yates algo
 
-        positions.forEach(num => {
-            const cell = document.createElement('div');
-            cell.className = 'cell';
-            cell.textContent = num;
-            cell.onclick = () => handleClick(num, cell);
-            grid.appendChild(cell);
+    function isOverlapping(x, y, circles) {
+        for (let i = 0; i < circles.length; i++) {
+            const circleX = circles[i].offsetLeft + circles[i].offsetWidth / 2;
+            const circleY = circles[i].offsetTop + circles[i].offsetHeight / 2;
+            const distance = Math.sqrt(Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2));
+                if (distance < 120) {  // 120 是最小允许距离
+                    return true;
+                }
+        }
+        return false;
+    }
+
+
+    function generateCircles() {
+        const container = document.getElementById('container');
+        const numbers = Array.from({length: 25}, (_, i) => i + 1);
+        shuffle(numbers);
+
+        numbers.forEach(num => {
+            const circle = document.createElement('div');
+            circle.className = 'circle';
+            circle.textContent = num;
+
+            let x, y;
+            do {
+                x = Math.random() * (container.clientWidth - 60);
+                y = Math.random() * (container.clientHeight - 60);
+            } while (isOverlapping(x, y, document.querySelectorAll('.circle'))); // 中心点检测
+
+            circle.style.left = `${x}px`;
+            circle.style.top = `${y}px`;
+            circle.onclick = () => handleClick(num, circle);
+            container.appendChild(circle);
         });
     }
 
-    function handleClick(num, cell) {
+    function handleClick(num, circle) {
         if (num === currentNum) {
-            cell.classList.remove('incorrect');
-            cell.classList.add('correct');
-            
-            if (lastIncorrectCell) {
-                lastIncorrectCell.classList.remove('incorrect');  // 恢复上一个错误方块的颜色
-                lastIncorrectCell = null;
+            circle.classList.remove('incorrect');
+            circle.classList.add('correct');
+
+            if (lastIncorrectCircle) {
+                lastIncorrectCircle.classList.remove('incorrect');
+                lastIncorrectCircle = null;
             }
 
             if (num === 1) {
-                startTime = new Date();
+                startTime = new Date(); 
             }
             if (num === 25) {
                 const endTime = new Date();
                 const totalTime = (endTime - startTime) / 1000;
                 document.getElementById('result').textContent = `Test completed in ${totalTime.toFixed(2)} seconds`;
-                document.querySelectorAll('.cell').forEach(cell => cell.classList.add('hidden'));
+                document.querySelectorAll('.circle').forEach(circle => circle.style.visibility = 'hidden');
                 
-                // 可选：在本地存储测试结果
                 const previousResults = JSON.parse(localStorage.getItem('tmtaResults')) || [];
                 previousResults.push({ time: totalTime, date: new Date().toISOString() });
                 localStorage.setItem('tmtaResults', JSON.stringify(previousResults));
             }
             currentNum += 1;
         } else {
-            cell.classList.add('incorrect');
-            lastIncorrectCell = cell;  // 记录当前错误的方块
+            circle.classList.add('incorrect');
+            lastIncorrectCircle = circle;
         }
     }
 
-    function showPreviousResults() {
-        const results = JSON.parse(localStorage.getItem('tmtaResults')) || [];
-        if (results.length > 0) {
-            const resultText = results.map(result => `Time: ${result.time}s on ${result.date}`).join('<br>');
-            document.getElementById('result').innerHTML = `Previous Results:<br>${resultText}`;
-        }
-    }
+    // function showPreviousResults() {
+    //     const results = JSON.parse(localStorage.getItem('tmtaResults')) || [];
+    //     if (results.length > 0) {
+    //         const resultText = results.map(result => `Time: ${result.time}s on ${result.date}`).join('<br>');
+    //         document.getElementById('result').innerHTML = `Previous Results:<br>${resultText}`;
+    //     }
+    // }
 
-    generateGrid();
+    generateCircles();
     showPreviousResults();
 </script>
 
