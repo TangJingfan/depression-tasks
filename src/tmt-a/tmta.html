@@ -42,12 +42,14 @@
             height: 600px;
             /* set height */
             position: relative;
+            /* make circles in a proper position (centering in the screen) */
             border: 1px solid #ccc;
         }
 
         .circle {
             width: 55px;
             height: 55px;
+            /* size of the circle */
             background-color: lightblue;
             border-radius: 50%;
             display: flex;
@@ -130,13 +132,12 @@
 
         function handleClick(num, circle) {
             if (num === currentNum) {
-                circle.classList.remove('incorrect');
-                circle.classList.add('correct');
+                document.querySelectorAll('.incorrect').forEach(incorrectCircle => {
+                    incorrectCircle.classList.remove('incorrect');
+                    incorrectCircle.style.backgroundColor = 'lightblue';
+                });
 
-                if (lastIncorrectCircle) {
-                    lastIncorrectCircle.classList.remove('incorrect');
-                    lastIncorrectCircle = null;
-                }
+                circle.classList.add('correct');
 
                 if (num === 1) {
                     startTime = new Date();
@@ -154,7 +155,6 @@
                 currentNum += 1;
             } else {
                 circle.classList.add('incorrect');
-                lastIncorrectCircle = circle;
             }
         }
 
