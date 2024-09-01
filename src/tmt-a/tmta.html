@@ -55,12 +55,12 @@
         <canvas id="mouseCanvas" width="900" height="600"></canvas>
     </div>
     <p id="result"></p>
-    <p id="errorCount"></p> <!-- 显示错误点击次数 -->
+    <p id="errorCount"></p> <!-- display the number of wrong click -->
 
     <script>
         let currentNum = 1;
         let startTime;
-        let incorrectClicks = 0; // 统计错误点击次数
+        let incorrectClicks = 0; // counter for wrong clicks
         let mousePath = [];
         const canvas = document.getElementById('mouseCanvas');
         const ctx = canvas.getContext('2d');
@@ -72,6 +72,7 @@
             }
             return array;
         }
+        // shuffle the number; fisher-yates algo
 
         function isOverlapping(x, y, circles) {
             for (let i = 0; i < circles.length; i++) {
@@ -84,6 +85,7 @@
             }
             return false;
         }
+        // calculating distance
 
         function generateCircles() {
             const container = document.getElementById('container');
