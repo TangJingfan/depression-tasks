@@ -65,6 +65,8 @@
         const canvas = document.getElementById('mouseCanvas');
         const ctx = canvas.getContext('2d');
 
+        const MAX_CIRCLES = 25;
+
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -89,7 +91,7 @@
 
         function generateCircles() {
             const container = document.getElementById('container');
-            const numbers = Array.from({ length: 25 }, (_, i) => i + 1);
+            const numbers = Array.from({ length: MAX_CIRCLES }, (_, i) => i + 1);
             shuffle(numbers);
 
             numbers.forEach(num => {
@@ -122,7 +124,7 @@
                 if (num === 1) {
                     startTime = new Date();
                 }
-                if (num === 25) {
+                if (num === MAX_CIRCLES) {
                     const endTime = new Date();
                     const totalTime = (endTime - startTime) / 1000;
                     document.getElementById('result').textContent = `Test completed in ${totalTime.toFixed(2)} seconds`;
@@ -154,11 +156,11 @@
             ctx.stroke();
 
             // save picture
-            const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-            const link = document.createElement('a');
-            link.download = 'mouse_path.png';
-            link.href = image;
-            link.click();
+            // const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+            // const link = document.createElement('a');
+            // link.download = 'mouse_path.png';
+            // link.href = image;
+            // link.click();
         }
 
         canvas.addEventListener('mousemove', (event) => {
