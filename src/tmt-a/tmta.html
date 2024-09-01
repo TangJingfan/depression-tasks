@@ -6,50 +6,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMT-A Test</title>
     <style>
-        /* Above is html setting */
-        /* line 1 -> Claim file type to be html */
-        /* line 2 -> Claim language to be English */
-        /* line 3 -> Head part */
-        /* line 4 -> <head> part */
-        /* line 5 -> Claim file type to be html */
-        /* line 6 -> title */
-        /* line 7 -> title part */
         body {
             font-family: Arial, sans-serif;
-            /* Set the font for the page */
             display: flex;
-            /* Use flexbox for layout */
             flex-direction: column;
-            /* Arrange items in a column */
             align-items: center;
-            /* Center items horizontally */
             justify-content: center;
-            /* Center items vertically */
             height: 100vh;
-            /* Full viewport height */
             margin: 0;
-            /* Remove default margin */
             position: relative;
-            /* Set positioning for the container */
             overflow: hidden;
-            /* Hide any overflowing content */
         }
 
         #container {
-            /* container serves to control the place where elements can appear */
             width: 900px;
-            /* set width */
             height: 600px;
-            /* set height */
             position: relative;
-            /* make circles in a proper position (centering in the screen) */
             border: 1px solid #ccc;
         }
 
         .circle {
             width: 55px;
             height: 55px;
-            /* size of the circle */
             background-color: lightblue;
             border-radius: 50%;
             display: flex;
@@ -72,17 +50,18 @@
 </head>
 
 <body>
-
-
-
     <h1>TMT-A Test</h1>
-    <div id="container"></div>
+    <div id="container">
+        <canvas id="mouseCanvas" width="900" height="600"></canvas>
+    </div>
     <p id="result"></p>
 
     <script>
         let currentNum = 1;
         let startTime;
-        let lastIncorrectCircle = null;
+        let mousePath = [];
+        const canvas = document.getElementById('mouseCanvas');
+        const ctx = canvas.getContext('2d');
 
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -92,20 +71,17 @@
             return array;
         }
 
-        // Fisher-yates algo
-
         function isOverlapping(x, y, circles) {
             for (let i = 0; i < circles.length; i++) {
                 const circleX = circles[i].offsetLeft + circles[i].offsetWidth / 2;
                 const circleY = circles[i].offsetTop + circles[i].offsetHeight / 2;
                 const distance = Math.sqrt(Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2));
-                if (distance < 120) {  // 120 is the minimun distance
+                if (distance < 120) {
                     return true;
                 }
             }
             return false;
         }
-
 
         function generateCircles() {
             const container = document.getElementById('container');
@@ -121,7 +97,7 @@
                 do {
                     x = Math.random() * (container.clientWidth - 60);
                     y = Math.random() * (container.clientHeight - 60);
-                } while (isOverlapping(x, y, document.querySelectorAll('.circle'))); // examining the distance 
+                } while (isOverlapping(x, y, document.querySelectorAll('.circle')));
 
                 circle.style.left = `${x}px`;
                 circle.style.top = `${y}px`;
@@ -151,6 +127,8 @@
                     const previousResults = JSON.parse(localStorage.getItem('tmtaResults')) || [];
                     previousResults.push({ time: totalTime, date: new Date().toISOString() });
                     localStorage.setItem('tmtaResults', JSON.stringify(previousResults));
+
+                    saveMousePathAsImage();
                 }
                 currentNum += 1;
             } else {
@@ -158,10 +136,34 @@
             }
         }
 
+        function saveMousePathAsImage() {
+            // Draw the mouse path onto the canvas
+            ctx.beginPath();
+            ctx.moveTo(mousePath[0].x, mousePath[0].y);
+            for (let i = 1; i < mousePath.length; i++) {
+                ctx.lineTo(mousePath[i].x, mousePath[i].y);
+            }
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Save the canvas as an image
+            const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+            const link = document.createElement('a');
+            link.download = 'mouse_path.png';
+            link.href = image;
+            link.click();
+        }
+
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            mousePath.push({ x, y });
+        });
 
         generateCircles();
     </script>
-
 </body>
 
 </html>
