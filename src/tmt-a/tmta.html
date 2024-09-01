@@ -62,6 +62,8 @@
         let startTime;
         let incorrectClicks = 0; // counter for wrong clicks
         let mousePath = [];
+        let circlePositions = []; // Save the positions of circles
+
         const canvas = document.getElementById('mouseCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -109,6 +111,9 @@
                 circle.style.top = `${y}px`;
                 circle.onclick = () => handleClick(num, circle);
                 container.appendChild(circle);
+
+                // Save the position of each circle
+                circlePositions.push({ x: x + 27.5, y: y + 27.5 }); // 27.5 is half the width/height of the circle
             });
         }
 
@@ -145,7 +150,7 @@
         }
 
         function saveMousePathAsImage() {
-            // draw mouse-path
+            // Draw mouse path
             ctx.beginPath();
             ctx.moveTo(mousePath[0].x, mousePath[0].y);
             for (let i = 1; i < mousePath.length; i++) {
@@ -155,12 +160,21 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // save picture
-            // const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-            // const link = document.createElement('a');
-            // link.download = 'mouse_path.png';
-            // link.href = image;
-            // link.click();
+            // Draw red circles at the correct positions
+            circlePositions.forEach(pos => {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 15, 0, 2 * Math.PI); // 27.5 is the radius
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+
+            // Save the canvas as an image
+            const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+            const link = document.createElement('a');
+            link.download = 'mouse_path.png';
+            link.href = image;
+            link.click();
         }
 
         canvas.addEventListener('mousemove', (event) => {
