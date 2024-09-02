@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMT-B Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #container {
+            width: 900px;
+            height: 600px;
+            position: relative;
+            border: 1px solid #ccc;
+        }
+
+        .circle {
+            width: 55px;
+            height: 55px;
+            background-color: lightblue;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            cursor: pointer;
+            font-size: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .correct {
+            background-color: green !important;
+        }
+
+        .incorrect {
+            background-color: red !important;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>TMT-B Test</h1>
+    <div id="container">
+        <canvas id="mouseCanvas" width="900" height="600"></canvas>
+    </div>
+    <p id="result"></p>
+    <p id="errorCount"></p>
+
+    <script>
+        let currentStep = 0;
+        let startTime;
+        let incorrectClicks = 0;
+        let mousePath = [];
+        const canvas = document.getElementById('mouseCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const sequence = [
+            '1', 'A', '2', 'B', '3', 'C', '4', 'D',
+            '5', 'E', '6', 'F', '7', 'G', '8', 'H'
+        ];
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function isOverlapping(x, y, circles) {
+            for (let i = 0; i < circles.length; i++) {
+                const circleX = circles[i].offsetLeft + circles[i].offsetWidth / 2;
+                const circleY = circles[i].offsetTop + circles[i].offsetHeight / 2;
+                const distance = Math.sqrt(Math.pow(x - circleX, 2) + Math.pow(y - circleY, 2));
+                if (distance < 120) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function generateCircles() {
+            const container = document.getElementById('container');
+            const shuffledSequence = shuffle([...sequence]);
+
+            shuffledSequence.forEach(item => {
+                const circle = document.createElement('div');
+                circle.className = 'circle';
+                circle.textContent = item;
+
+                let x, y;
+                do {
+                    x = Math.random() * (container.clientWidth - 60);
+                    y = Math.random() * (container.clientHeight - 60);
+                } while (isOverlapping(x, y, document.querySelectorAll('.circle')));
+
+                circle.style.left = `${x}px`;
+                circle.style.top = `${y}px`;
+                circle.onclick = () => handleClick(item, circle);
+                container.appendChild(circle);
+            });
+        }
+
+        function handleClick(item, circle) {
+            if (item === sequence[currentStep]) {
+                document.querySelectorAll('.incorrect').forEach(incorrectCircle => {
+                    incorrectCircle.classList.remove('incorrect');
+                    incorrectCircle.style.backgroundColor = 'lightblue';
+                });
+
+                circle.classList.add('correct');
+
+                if (currentStep === 0) {
+                    startTime = new Date();
+                }
+                if (currentStep === sequence.length - 1) {
+                    const endTime = new Date();
+                    const totalTime = (endTime - startTime) / 1000;
+                    document.getElementById('result').textContent = `Test completed in ${totalTime.toFixed(2)} seconds`;
+                    document.getElementById('errorCount').textContent = `Number of incorrect clicks: ${incorrectClicks}`;
+                    document.querySelectorAll('.circle').forEach(circle => circle.style.visibility = 'hidden');
+
+                    const previousResults = JSON.parse(localStorage.getItem('tmtbResults')) || [];
+                    previousResults.push({ time: totalTime, errors: incorrectClicks, date: new Date().toISOString() });
+                    localStorage.setItem('tmtbResults', JSON.stringify(previousResults));
+
+                    saveMousePathAsImage();
+                }
+                currentStep += 1;
+            } else {
+                circle.classList.add('incorrect');
+                incorrectClicks += 1;
+            }
+        }
+
+        function saveMousePathAsImage() {
+            // Draw the mouse path onto the canvas
+            ctx.beginPath();
+            ctx.moveTo(mousePath[0].x, mousePath[0].y);
+            for (let i = 1; i < mousePath.length; i++) {
+                ctx.lineTo(mousePath[i].x, mousePath[i].y);
+            }
+            ctx.strokeStyle = 'blue';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Mark the correct positions
+            document.querySelectorAll('.circle').forEach(circle => {
+                const x = parseFloat(circle.style.left) + circle.offsetWidth / 2;
+                const y = parseFloat(circle.style.top) + circle.offsetHeight / 2;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 30, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            });
+
+            // Save the canvas as an image (optional)
+            // const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+            // const link = document.createElement('a');
+            // link.download = 'mouse_path_tmtb.png';
+            // link.href = image;
+            // link.click();
+        }
+
+        canvas.addEventListener('mousemove', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            mousePath.push({ x, y });
+        });
+
+        generateCircles();
+    </script>
+</body>
+
+</html>
