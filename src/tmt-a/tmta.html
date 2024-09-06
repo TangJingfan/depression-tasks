@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TMT-A Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Noto Sans SC', "Microsoft YaHei", "SimSun", Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -46,27 +47,54 @@
         .incorrect {
             background-color: red !important;
         }
+
+        #intro,
+        #startScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+        }
+
+        #proceedBtn {
+            font-family: 'Noto Sans SC', "Microsoft YaHei", "SimSun", Arial, sans-serif;
+            font-size: 16px;
+        }
     </style>
 </head>
 
 <body>
+    <div id="intro">
+        <h2>这是TMT-A测试</h2>
+        <h2>测试者需要将1到25的数按照升序点击</h2>
+        <button id="proceedBtn">继续</button>
+    </div>
+
+    <div id="startScreen" style="display:none;">
+        <h2>请点击任意位置开始测试</h2>
+    </div>
+
     <h1>TMT-A Test</h1>
     <div id="container">
         <canvas id="mouseCanvas" width="900" height="600"></canvas>
     </div>
-    <p id="result"></p>
-    <p id="errorCount"></p> <!-- display the number of wrong click -->
 
     <script>
         let currentNum = 1;
         let startTime;
         let incorrectClicks = 0; // counter for wrong clicks
         let mousePath = [];
-        let circlePositions = []; // Save the positions of circles
+        let circlePositions = [];
 
         const canvas = document.getElementById('mouseCanvas');
         const ctx = canvas.getContext('2d');
-
         const MAX_CIRCLES = 25;
 
         function shuffle(array) {
@@ -76,7 +104,6 @@
             }
             return array;
         }
-        // shuffle the number; fisher-yates algo
 
         function isOverlapping(x, y, circles) {
             for (let i = 0; i < circles.length; i++) {
@@ -89,7 +116,6 @@
             }
             return false;
         }
-        // calculating distance
 
         function generateCircles() {
             const container = document.getElementById('container');
@@ -112,8 +138,7 @@
                 circle.onclick = () => handleClick(num, circle);
                 container.appendChild(circle);
 
-                // Save the position of each circle
-                circlePositions.push({ x: x + 27.5, y: y + 27.5 }); // 27.5 is half the width/height of the circle
+                circlePositions.push({ x: x + 27.5, y: y + 27.5 });
             });
         }
 
@@ -132,15 +157,9 @@
                 if (num === MAX_CIRCLES) {
                     const endTime = new Date();
                     const totalTime = (endTime - startTime) / 1000;
-                    document.getElementById('result').textContent = `Test completed in ${totalTime.toFixed(2)} seconds`;
-                    document.getElementById('errorCount').textContent = `Number of incorrect clicks: ${incorrectClicks}`;
+
+                    saveMousePathAsCSV(totalTime, incorrectClicks);
                     document.querySelectorAll('.circle').forEach(circle => circle.style.visibility = 'hidden');
-
-                    const previousResults = JSON.parse(localStorage.getItem('tmtaResults')) || [];
-                    previousResults.push({ time: totalTime, errors: incorrectClicks, date: new Date().toISOString() });
-                    localStorage.setItem('tmtaResults', JSON.stringify(previousResults));
-
-                    saveMousePathAsImage();
                 }
                 currentNum += 1;
             } else {
@@ -149,31 +168,20 @@
             }
         }
 
-        function saveMousePathAsImage() {
-            // Draw mouse path
-            ctx.beginPath();
-            ctx.moveTo(mousePath[0].x, mousePath[0].y);
-            for (let i = 1; i < mousePath.length; i++) {
-                ctx.lineTo(mousePath[i].x, mousePath[i].y);
-            }
-            ctx.strokeStyle = 'blue';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // Draw red circles at the correct positions
-            circlePositions.forEach(pos => {
-                ctx.beginPath();
-                ctx.arc(pos.x, pos.y, 15, 0, 2 * Math.PI); // 27.5 is the radius
-                ctx.strokeStyle = 'red';
-                ctx.lineWidth = 2;
-                ctx.stroke();
+        function saveMousePathAsCSV(totalTime, errors) {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "x,y\n";
+            mousePath.forEach(point => {
+                csvContent += `${point.x},${point.y}\n`;
             });
 
-            // Save the canvas as an image
-            const image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
-            const link = document.createElement('a');
-            link.download = 'mouse_path.png';
-            link.href = image;
+            csvContent += `\nTest Summary\nTime (s),Errors\n${totalTime},${errors}`;
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "mouse_path_and_summary.csv");
+            document.body.appendChild(link);
             link.click();
         }
 
@@ -184,7 +192,15 @@
             mousePath.push({ x, y });
         });
 
-        generateCircles();
+        document.getElementById('proceedBtn').addEventListener('click', () => {
+            document.getElementById('intro').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+        });
+
+        document.getElementById('startScreen').addEventListener('click', () => {
+            document.getElementById('startScreen').style.display = 'none';
+            generateCircles();
+        });
     </script>
 </body>
 
