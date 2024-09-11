@@ -170,9 +170,9 @@
 
         function saveMousePathAsCSV(totalTime, errors) {
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "x,y\n";
+            csvContent += "x,y,time\n";
             mousePath.forEach(point => {
-                csvContent += `${point.x},${point.y}\n`;
+                csvContent += `${point.x},${point.y},${point.time}\n`;
             });
 
             csvContent += `\nTest Summary\nTime (s),Errors\n${totalTime},${errors}`;
@@ -189,7 +189,8 @@
             const rect = canvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            mousePath.push({ x, y });
+            const time = new Date().getTime(); // Capture the timestamp for each movement
+            mousePath.push({ x, y, time });
         });
 
         document.getElementById('proceedBtn').addEventListener('click', () => {
