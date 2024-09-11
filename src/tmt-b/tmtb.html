@@ -157,7 +157,7 @@
 
                 circle.classList.add('correct');
 
-                if (currentStep === 0) startTime = new Date();
+                if (currentStep === 0) startTime = new Date().getTime(); // record start time
                 if (currentStep === sequence.length - 1) {
                     const endTime = new Date();
                     const totalTime = (endTime - startTime) / 1000;
@@ -176,9 +176,9 @@
             let csvContent = "data:text/csv;charset=utf-8,";
             csvContent += `Completion Time,Incorrect Clicks\n${totalTime},${incorrectClicks}\n`;
 
-            csvContent += "x,y\n";
+            csvContent += "x,y,time\n"; // add time column
             mousePath.forEach(point => {
-                csvContent += `${point.x},${point.y}\n`;
+                csvContent += `${point.x},${point.y},${point.time}\n`; // add time to csv
             });
 
             const encodedUri = encodeURI(csvContent);
@@ -193,7 +193,9 @@
             const rect = canvas.getBoundingClientRect();
             const x = event.clientX - rect.left;
             const y = event.clientY - rect.top;
-            mousePath.push({ x, y });
+            const currentTime = new Date().getTime(); // get current timestamp
+            const time = (currentTime - startTime) / 1000; // record time
+            mousePath.push({ x, y, time });
         });
     </script>
 </body>
